@@ -1,0 +1,84 @@
+/* Paragraphes vides insérés par WordPress autour du shortcode (le thème les affiche en pastille grise) */
+p:empty, .tle-list p:empty, code:empty, p:has(> code:empty:only-child) { display: none !important; }
+/* Fonds : on annule ceux du thème partout, puis on remet seulement pastille et titre */
+.tle-list, .tle-list * { background-color: transparent !important; background-image: none !important; }
+/* Style inspiré de l'affiche du lieu : date en pastille, trait vertical, titres surlignés en couleur.
+   Les polices sont imposées pour ne pas hériter d'un thème à police monospace. */
+.tle-list, .tle-list * { box-sizing: border-box; }
+.tle-list *, .tle-list::before, .tle-list::after, .tle-list *::before, .tle-list *::after {
+	font-family: "Poppins", "Nunito", "Trebuchet MS", "Segoe UI", Helvetica, Arial, sans-serif !important;
+	letter-spacing: normal !important;
+	text-shadow: none !important;
+}
+.tle-list::before, .tle-list::after, .tle-list *::before, .tle-list *::after { content: none !important; display: none !important; }
+.tle-list .tle-body > *, .tle-list .tle-side > time {
+	background: none; border: 0 !important; box-shadow: none !important; padding: 0;
+	position: static !important; float: none !important; margin: 0;
+	height: auto !important; max-height: none !important; overflow: visible !important;
+}
+
+.tle-list { display: block; margin: 1.5rem 0; line-height: 1.55; font-size: 1rem; color: #111; }
+.tle-list .tle-item {
+	display: flex; align-items: stretch; margin: 0; padding: 0; background: none; border: 0; box-shadow: none;
+}
+.tle-list .tle-side {
+	flex: none; width: 170px; padding: 0 1rem 1.75rem 0; display: flex; flex-direction: column;
+	align-items: center; gap: .5rem; text-align: center;
+}
+.tle-list .tle-side .tle-date {
+	display: inline-block; padding: .25rem .8rem !important; background-color: #fff !important;
+	border-radius: 999px; box-shadow: 0 1px 4px rgba(0, 0, 0, .18) !important;
+	font-size: .85rem; font-weight: 700; line-height: 1.3; color: #111;
+}
+.tle-list .tle-side .tle-date span { display: block; }
+.tle-list .tle-side .tle-img { width: 100%; max-height: 150px; margin: 0; padding: 0; border: 0; object-fit: cover; border-radius: 12px; background: none; }
+.tle-list .tle-item, .tle-list .tle-side, .tle-list .tle-body { height: auto !important; overflow: visible !important; }
+.tle-list .tle-body { flex: 1; min-width: 0; padding: 0 0 1.75rem 1.5rem; border-left: 3px solid #111; }
+.tle-list .tle-item:last-child .tle-body { padding-bottom: .5rem; }
+.tle-list .tle-body .tle-title {
+	display: inline-block; margin: .1rem 0 .6rem; padding: .25rem .8rem; border-radius: 10px;
+	font-size: 1.15rem !important; font-weight: 700 !important; line-height: 1.3; color: #111; background-color: #ff8a94 !important;
+}
+.tle-list .tle-item:nth-child(4n+2) .tle-title { background-color: #f7c548 !important; }
+.tle-list .tle-item:nth-child(4n+3) .tle-title { background-color: #f59a3d !important; }
+.tle-list .tle-item:nth-child(4n+4) .tle-title { background-color: #8fd0a8 !important; }
+.tle-list .tle-title a { color: inherit !important; text-decoration: none !important; background: none; }
+.tle-list .tle-title a:hover { text-decoration: underline !important; text-underline-offset: 3px; }
+.tle-list .tle-body .tle-place { margin: 0 0 .3rem; font-size: .9rem; font-weight: 600; }
+.tle-list .tle-body .tle-desc { margin: 0; font-size: .95rem; font-weight: 300; color: #111; }
+.tle-empty, .tle-error { font-style: italic; }
+.tle-list .tle-body .tle-cal { margin: .5rem 0 0; font-size: .75rem; font-weight: 300; display: flex; flex-wrap: wrap; gap: .2rem .6rem; align-items: center; opacity: .65; }
+.tle-list .tle-cal:hover { opacity: 1; }
+.tle-list .tle-cal span { margin-right: .1rem; }
+.tle-list .tle-cal a {
+	padding: 0; border: 0 !important; border-radius: 0; color: inherit !important; font-weight: 400;
+	text-decoration: underline !important; text-underline-offset: 2px; background: none; line-height: 1.4;
+}
+.tle-list .tle-cal a:hover { text-decoration: none !important; }
+.tle-list .tle-actions { position: relative; gap: .3rem .5rem; opacity: 1 !important; }
+.tle-list .tle-pop.tle-join summary { background-color: #111 !important; border-color: #111 !important; color: #fff !important; }
+.tle-list .tle-pop.tle-join[open] summary { background-color: #fff !important; color: #111 !important; }
+.tle-list .tle-panel.tle-note { width: 16rem; white-space: normal; }
+.tle-list .tle-panel.tle-note p { margin: 0 !important; font-size: .8rem; line-height: 1.4; }
+.tle-list .tle-pop { position: relative; display: inline-block; }
+.tle-list .tle-pop summary { list-style: none; cursor: pointer; padding: .15rem .6rem; border: 1px solid #999 !important; border-radius: 999px; color: #333 !important; font-size: .75rem; background-color: transparent !important; }
+.tle-list .tle-pop summary::-webkit-details-marker { display: none; }
+.tle-list .tle-pop summary::before, .tle-list .tle-pop summary::after { display: none !important; content: none !important; }
+.tle-list .tle-pop[open] summary { border-color: #111 !important; color: #111 !important; }
+.tle-list .tle-panel { position: absolute; z-index: 50; left: 0; top: 100%; margin-top: .3rem; min-width: 11rem; padding: .5rem .8rem; display: flex; flex-direction: column; gap: .35rem; background-color: #fff !important; border: 1px solid #111 !important; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+.tle-list .tle-panel a { font-size: .85rem; white-space: nowrap; }
+.tle-list .tle-add-row .tle-body { padding-bottom: .5rem; }
+.tle-list .tle-pop.tle-add summary { font-size: .8rem; }
+.tle-source { margin: 1rem 0 0; font-size: .8rem; opacity: .7; }
+@media (max-width: 560px) {
+	.tle-list .tle-side { width: 100px; padding-right: .6rem; }
+	.tle-list .tle-side .tle-date { font-size: .75rem; padding: .2rem .5rem !important; }
+	.tle-list .tle-body { padding-left: .9rem; }
+	.tle-list .tle-body .tle-title { font-size: 1rem !important; }
+}
+
+.tle-alert { margin: 1rem 0; padding: .9rem 1.1rem; border: 2px solid #111; border-left-width: 8px; border-radius: 4px; background-color: #fff3cd !important; color: #111; font-size: .95rem; }
+.tle-alert a { color: #111 !important; font-weight: 700; text-decoration: underline !important; }
+.tle-list .tle-body .tle-share { margin-top: .35rem; }
+.tle-list .tle-body .tle-admin { margin-top: .35rem; }
+.tle-list .tle-admin .tle-copied { font-style: normal; color: #1a7f37 !important; }
