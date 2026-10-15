@@ -83,3 +83,8 @@ p:empty, .tle-list p:empty, code:empty, p:has(> code:empty:only-child) { display
 .tle-list .tle-body .tle-share { margin-top: .35rem; }
 .tle-list .tle-body .tle-admin { margin-top: .35rem; }
 .tle-list .tle-admin .tle-copied { font-style: normal; color: #1a7f37 !important; }
+
+.tle-list .tle-body .tle-more { margin: .4rem 0 0; font-size: .85rem; }
+.tle-list .tle-body .tle-more summary { cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; background: none !important; display: list-item; }
+.tle-list .tle-body .tle-long { margin: .5rem 0 0; padding: 0; font-weight: 300; background: none !important; }
+.tle-list .tle-body .tle-long p { margin: 0 0 .6rem !important; background: none !important; }

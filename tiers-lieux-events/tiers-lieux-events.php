@@ -390,6 +390,11 @@ function tle_shortcode($atts)
         if ($desc) {
             $out .= '<div class="tle-desc">' . esc_html($desc) . '</div>';
         }
+        $long = !empty($e['description']) ? trim(wp_strip_all_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], "\n", $e['description']))) : '';
+        if ('' !== $long && $long !== trim($full_desc)) {
+            $out .= '<details class="tle-more"><summary>Voir la description complète</summary><div class="tle-long">'
+                . wpautop(esc_html($long)) . '</div></details>';
+        }
         $share_url = $link ?: (is_singular() ? get_permalink() : home_url('/'));
         $share_text = $e['name'] . ' - ' . tle_date('j F Y', $start);
         $u = rawurlencode($share_url);
