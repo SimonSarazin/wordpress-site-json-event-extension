@@ -421,8 +421,8 @@ function tle_shortcode($atts)
             . '<a href="' . esc_attr($cal['ics']) . '" download="evenement.ics">Apple / autre (.ics)</a>';
         $out .= '<div class="tle-cal tle-actions">'
             . ($link ? '<details class="tle-pop tle-join"><summary>Je participe</summary><div class="tle-panel tle-note">'
-                . '<p>Pour indiquer votre participation, envoyez un sms au numéro qui apparaît. Vous pouvez aussi indiquer sur l’événement que vous participez. Pour cela, il faut avoir un compte sur tiers-lieux.org et s’y connecter (ou en créer un, c’est gratuit).</p>'
-                . '<p>Une fois connecté·e, cliquez sur « Participer » dans la fiche de l’événement.</p>'
+                . '<p>Pour indiquer votre participation, s’il est affiché, envoyez un sms au numéro qui apparaît ou un mail au contact.</p>'
+                . '<p>Vous pouvez aussi indiquer, en cliquant sur l’événement, que vous souhaitez y participer. Pour cela, il faut avoir un compte sur tiers-lieux.org et s’y connecter (ou en créer un, c’est gratuit). Une fois connecté·e, cliquez sur « Participer » dans la fiche de l’événement.</p>'
                 . '<a href="' . esc_url(add_query_arg('participer', '1', $link)) . '" target="_blank" rel="noopener">Continuer vers tiers-lieux.org →</a>'
                 . '</div></details>' : '')
             . $pop('Partager', $share) . $pop('Ajouter à mon agenda', $agenda);
