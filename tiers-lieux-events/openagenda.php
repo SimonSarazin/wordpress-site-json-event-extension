@@ -112,8 +112,8 @@ add_action('wp_ajax_tle_openagenda', function () {
     $response = wp_remote_request($url, [
         'method'  => 'PUT',
         'timeout' => 20,
-        'headers' => ['access-token' => $token, 'Content-Type' => 'application/json', 'lang' => 'fr'],
-        'body'    => wp_json_encode($data),
+        'headers' => ['access-token' => $token, 'lang' => 'fr'],
+        'body'    => ['data' => wp_json_encode($data)], // l'API attend le JSON dans un champ de formulaire « data »
     ]);
     if (is_wp_error($response)) {
         wp_send_json_error($response->get_error_message());
@@ -122,6 +122,9 @@ add_action('wp_ajax_tle_openagenda', function () {
     $body = json_decode(wp_remote_retrieve_body($response), true);
     if ($code < 200 || $code >= 300) {
         $msg = is_array($body) ? ($body['message'] ?? $body['error'] ?? '') : '';
+        if (is_array($body) && !empty($body['errors'])) {
+            $msg .= ' ' . wp_json_encode($body['errors'], JSON_UNESCAPED_UNICODE);
+        }
         wp_send_json_error('OpenAgenda a refusé l’envoi (' . $code . ') ' . (is_string($msg) ? $msg : ''));
     }
     wp_send_json_success('Envoyé à OpenAgenda ✓');
