@@ -101,11 +101,9 @@ add_action('wp_ajax_tle_openagenda', function () {
         'description' => mb_substr('' !== $short ? $short : $event['name'], 0, 200),
         'locationUid' => (int) $s['location'],
         'timings'     => [['begin' => tle_date('Y-m-d\TH:i:sO', $start), 'end' => tle_date('Y-m-d\TH:i:sO', $end)]],
-        'links'       => [['link' => TLE_SITE_BASE . '/profil/' . rawurlencode($slug)]],
     ];
-    if ('' !== $long) {
-        $data['longDescription'] = mb_substr($long, 0, 10000);
-    }
+    $fiche = TLE_SITE_BASE . '/profil/' . rawurlencode($slug);
+    $data['longDescription'] = mb_substr('' !== $long ? $long : $short, 0, 9000) . "\n\nFiche de l'événement : " . $fiche;
 
     // Création ou mise à jour selon l'identifiant externe : renvoyer un événement ne le duplique pas.
     $url = sprintf('%s/agendas/%s/events/ext/tiers-lieux/%s', TLE_OA_API, rawurlencode($s['agenda']), rawurlencode($slug));
