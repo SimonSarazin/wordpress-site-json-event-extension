@@ -92,3 +92,7 @@ p:empty, .tle-list p:empty, code:empty, p:has(> code:empty:only-child) { display
 .tle-list .tle-body .tle-more[open] summary::before { content: "▾ " !important; }
 .tle-list .tle-body .tle-long { margin: .5rem 0 0 !important; padding: 0 !important; text-indent: 0 !important; font-size: .95rem; font-weight: 300; background: none !important; }
 .tle-list .tle-body .tle-long p { margin: 0 0 .6rem !important; background: none !important; font-size: inherit; }
+
+/* Le bloc qui contient le shortcode peut être centré par la page : on garde le texte à gauche */
+.tle-list .tle-body, .tle-list .tle-body * { text-align: left !important; }
+.tle-list .tle-body .tle-title { align-self: flex-start; }
