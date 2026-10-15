@@ -27,7 +27,7 @@ Zipper le dossier `tiers-lieux-events/`, puis Extensions → Ajouter → Télév
 |---|---|---|
 | `show` | `upcoming` | `upcoming` (à venir), `past` (passés, du plus récent), `all` |
 | `limit` | `10` | nombre max, `0` = illimité |
-| `cache` | `30` | minutes de cache |
+| `cache` | `5` | minutes de cache |
 | `images` | `yes` | `no` pour masquer |
 | `empty` | « Aucun événement à venir… » | message si liste vide |
 | `id` | lieu choisi dans les réglages | identifiant Communecter d'un autre tiers-lieu (afficher plusieurs lieux sur un même site) |

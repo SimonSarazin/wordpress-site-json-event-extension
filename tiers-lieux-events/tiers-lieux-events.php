@@ -233,7 +233,7 @@ function tle_shortcode($atts)
         'ids'    => '', // plusieurs lieux précis, séparés par des virgules
         'show'   => 'upcoming', // upcoming | past | all
         'limit'  => 10,
-        'cache'  => 30, // minutes
+        'cache'  => 5, // minutes
         'images' => 'yes',
         'place'  => '', // adresse pour l'agenda et les données structurées ; défaut : celle des réglages
         'empty'  => 'Aucun événement à venir pour le moment.',
