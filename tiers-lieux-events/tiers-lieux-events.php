@@ -391,10 +391,6 @@ function tle_shortcode($atts)
             $out .= '<div class="tle-desc">' . esc_html($desc) . '</div>';
         }
         $long = !empty($e['description']) ? trim(wp_strip_all_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], "\n", $e['description']))) : '';
-        if ('' !== $long && $long !== trim($full_desc)) {
-            $out .= '<details class="tle-more"><summary>En savoir plus</summary><div class="tle-long">'
-                . wpautop(esc_html($long)) . '</div></details>';
-        }
         $share_url = $link ?: (is_singular() ? get_permalink() : home_url('/'));
         $share_text = $e['name'] . ' - ' . tle_date('j F Y', $start);
         $u = rawurlencode($share_url);
@@ -425,6 +421,9 @@ function tle_shortcode($atts)
             . '<a href="' . esc_url($cal['outlook']) . '" target="_blank" rel="noopener">Outlook</a>'
             . '<a href="' . esc_attr($cal['ics']) . '" download="evenement.ics">Apple / autre (.ics)</a>';
         $out .= '<div class="tle-cal tle-actions">'
+            . ('' !== $long && $long !== trim($full_desc)
+                ? '<details class="tle-pop tle-more"><summary>En savoir plus</summary><div class="tle-panel tle-long">' . wpautop(esc_html($long)) . '</div></details>'
+                : '')
             . ($link ? '<details class="tle-pop tle-join"><summary>Je participe</summary><div class="tle-panel tle-note">'
                 . '<p>Pour indiquer votre participation, s’il est affiché, envoyez un sms au numéro qui apparaît ou un mail au contact.</p>'
                 . '<p>Vous pouvez aussi indiquer, en cliquant sur l’événement, que vous souhaitez y participer. Pour cela, il faut avoir un compte sur tiers-lieux.org et s’y connecter (ou en créer un, c’est gratuit). Une fois connecté·e, cliquez sur « Participer » dans la fiche de l’événement.</p>'
