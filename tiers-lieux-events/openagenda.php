@@ -72,16 +72,14 @@ add_action('wp_ajax_tle_openagenda', function () {
         wp_send_json_error('OpenAgenda n’est pas configuré (Réglages → Événements Tiers-Lieux).');
     }
     $slug = isset($_POST['slug']) ? sanitize_text_field(wp_unslash($_POST['slug'])) : '';
-    $org = tle_org();
-    $events = tle_fetch_events($org['id'], 30);
-    if (is_wp_error($events)) {
-        wp_send_json_error($events->get_error_message());
-    }
     $event = null;
-    foreach ($events as $e) {
-        if (!empty($e['slug']) && $e['slug'] === $slug) {
-            $event = $e;
-            break;
+    foreach (tle_orgs() as $org) {
+        $events = tle_fetch_events($org['id'], 30);
+        foreach (is_wp_error($events) ? [] : $events as $e) {
+            if (!empty($e['slug']) && $e['slug'] === $slug) {
+                $event = $e;
+                break 2;
+            }
         }
     }
     if (!$event) {

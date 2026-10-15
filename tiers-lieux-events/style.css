@@ -69,6 +69,7 @@ p:empty, .tle-list p:empty, code:empty, p:has(> code:empty:only-child) { display
 .tle-list .tle-panel a { font-size: .85rem; white-space: nowrap; }
 .tle-list .tle-add-row .tle-body { padding-bottom: .5rem; }
 .tle-list .tle-pop.tle-add summary { font-size: .8rem; }
+.tle-list .tle-body .tle-org { margin: 0 0 .25rem; font-size: .7rem; font-weight: 600; letter-spacing: .06em !important; text-transform: uppercase; opacity: .6; }
 .tle-source { margin: 1rem 0 0; font-size: .8rem; opacity: .7; }
 @media (max-width: 560px) {
 	.tle-list .tle-side { width: 100px; padding-right: .6rem; }

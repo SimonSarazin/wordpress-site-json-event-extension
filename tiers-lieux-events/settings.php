@@ -37,6 +37,32 @@ add_action('admin_post_tle_save', function () {
     exit;
 });
 
+add_action('admin_post_tle_save_extra', function () {
+    if (!current_user_can('manage_options')) {
+        wp_die('Accès refusé');
+    }
+    check_admin_referer('tle_save_extra');
+    $raw = json_decode(wp_unslash($_POST['tle_extra'] ?? '[]'), true);
+    $main = tle_org()['id'];
+    $list = [];
+    foreach (is_array($raw) ? $raw : [] as $o) {
+        $id = is_array($o) && isset($o['id']) ? sanitize_text_field($o['id']) : '';
+        if (!preg_match('/^[a-f0-9]{24}$/', $id) || $id === $main || isset($list[$id]) || count($list) >= 20) {
+            continue;
+        }
+        $list[$id] = [
+            'id'    => $id,
+            'name'  => sanitize_text_field($o['name'] ?? ''),
+            'slug'  => sanitize_text_field($o['slug'] ?? ''),
+            'place' => sanitize_text_field($o['place'] ?? ''),
+        ];
+        delete_transient('tle_events_' . md5($id));
+    }
+    update_option('tle_extra_orgs', array_values($list));
+    wp_safe_redirect(add_query_arg('tle_extra_saved', 1, admin_url('options-general.php?page=tle-settings')));
+    exit;
+});
+
 // Recherche de tiers-lieux : relais serveur vers l'API publique, pour éviter tout souci de CORS.
 add_action('wp_ajax_tle_search', function () {
     check_ajax_referer('tle_search');
@@ -124,6 +150,24 @@ function tle_settings_page()
             <?php submit_button('Enregistrer'); ?>
         </form>
 
+        <h2>Autres tiers-lieux (optionnel)</h2>
+        <?php if (isset($_GET['tle_extra_saved'])) : ?>
+            <div class="notice notice-success is-dismissible"><p>Autres lieux enregistrés.</p></div>
+        <?php endif; ?>
+        <p>Le code court <code>[tiers_lieux_events]</code> affiche ensemble, par ordre de date, les événements du lieu principal et de ces lieux. Chaque événement indique alors son lieu.</p>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <input type="hidden" name="action" value="tle_save_extra">
+            <?php wp_nonce_field('tle_save_extra'); ?>
+            <input type="hidden" name="tle_extra" id="tle-extra" value="">
+            <ul id="tle-extra-list" style="max-width:520px"></ul>
+            <p>
+                <label for="tle-q2"><strong>Ajouter un tiers-lieu</strong></label><br>
+                <input type="search" id="tle-q2" class="regular-text" placeholder="Tapez le nom du lieu…" autocomplete="off">
+            </p>
+            <ul id="tle-results2" style="margin:.5em 0 0;max-width:420px"></ul>
+            <?php submit_button('Enregistrer les autres lieux'); ?>
+        </form>
+
         <h2>OpenAgenda (optionnel)</h2>
         <?php $oa = tle_oa_settings(); ?>
         <?php if (isset($_GET['tle_oa_saved'])) : ?>
@@ -148,43 +192,76 @@ function tle_settings_page()
         </form>
 
         <h2>Utilisation</h2>
-        <p>Placez le code court <code>[tiers_lieux_events]</code> dans un bloc « Code court » d'une page. Options : <code>show="upcoming|past|all"</code>, <code>limit="10"</code>, <code>images="no"</code>.</p>
+        <p>Placez le code court <code>[tiers_lieux_events]</code> dans un bloc « Code court » d'une page. Options : <code>show="upcoming|past|all"</code>, <code>limit="10"</code>, <code>images="no"</code>, <code>id="…"</code> (un seul lieu précis), <code>ids="…,…"</code> (une sélection de lieux).</p>
     </div>
     <script>
     (function () {
-        var q = document.getElementById('tle-q'), list = document.getElementById('tle-results'), timer;
+        var nonce = '<?php echo esc_js($nonce); ?>';
         function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-        q.addEventListener('input', function () {
-            clearTimeout(timer);
-            var v = q.value.trim();
-            if (v.length < 3) { list.innerHTML = ''; return; }
-            timer = setTimeout(function () {
-                list.innerHTML = '<li><em>Recherche…</em></li>';
-                fetch(ajaxurl + '?action=tle_search&_wpnonce=<?php echo esc_js($nonce); ?>&q=' + encodeURIComponent(v))
-                    .then(function (r) { return r.json(); })
-                    .then(function (res) {
-                        var items = (res && res.success) ? res.data : null;
-                        if (!items) { list.innerHTML = '<li>Recherche indisponible, réessayez.</li>'; return; }
-                        if (!items.length) { list.innerHTML = '<li>Aucun résultat.</li>'; return; }
-                        list.innerHTML = items.map(function (o, i) {
-                            return '<li><button type="button" class="button" style="width:100%;text-align:left;margin-bottom:4px" data-i="' + i + '"><strong>' + esc(o.name) + '</strong><br><small>' + esc(o.city) + '</small></button></li>';
-                        }).join('');
-                        list.onclick = function (e) {
-                            var b = e.target.closest('button[data-i]');
-                            if (!b) { return; }
-                            var o = items[b.getAttribute('data-i')];
-                            document.getElementById('tle-id').value = o.id;
-                            document.getElementById('tle-name').value = o.name;
-                            document.getElementById('tle-slug').value = o.slug;
-                            document.getElementById('tle-place').value = o.place;
-                            document.getElementById('tle-current').textContent = o.name + ' (à enregistrer)';
-                            list.innerHTML = '';
-                            q.value = '';
-                        };
-                    })
-                    .catch(function () { list.innerHTML = '<li>Recherche indisponible, réessayez.</li>'; });
-            }, 350);
+        function bindSearch(q, list, pick) {
+            var timer;
+            q.addEventListener('input', function () {
+                clearTimeout(timer);
+                var v = q.value.trim();
+                if (v.length < 3) { list.innerHTML = ''; return; }
+                timer = setTimeout(function () {
+                    list.innerHTML = '<li><em>Recherche…</em></li>';
+                    fetch(ajaxurl + '?action=tle_search&_wpnonce=' + nonce + '&q=' + encodeURIComponent(v))
+                        .then(function (r) { return r.json(); })
+                        .then(function (res) {
+                            var items = (res && res.success) ? res.data : null;
+                            if (!items) { list.innerHTML = '<li>Recherche indisponible, réessayez.</li>'; return; }
+                            if (!items.length) { list.innerHTML = '<li>Aucun résultat.</li>'; return; }
+                            list.innerHTML = items.map(function (o, i) {
+                                return '<li><button type="button" class="button" style="width:100%;text-align:left;margin-bottom:4px" data-i="' + i + '"><strong>' + esc(o.name) + '</strong><br><small>' + esc(o.city) + '</small></button></li>';
+                            }).join('');
+                            list.onclick = function (e) {
+                                var b = e.target.closest('button[data-i]');
+                                if (!b) { return; }
+                                pick(items[b.getAttribute('data-i')]);
+                                list.innerHTML = '';
+                                q.value = '';
+                            };
+                        })
+                        .catch(function () { list.innerHTML = '<li>Recherche indisponible, réessayez.</li>'; });
+                }, 350);
+            });
+        }
+
+        bindSearch(document.getElementById('tle-q'), document.getElementById('tle-results'), function (o) {
+            document.getElementById('tle-id').value = o.id;
+            document.getElementById('tle-name').value = o.name;
+            document.getElementById('tle-slug').value = o.slug;
+            document.getElementById('tle-place').value = o.place;
+            document.getElementById('tle-current').textContent = o.name + ' (à enregistrer)';
         });
+
+        var extras = <?php echo wp_json_encode(tle_extra_orgs(), JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+        var field = document.getElementById('tle-extra'), box = document.getElementById('tle-extra-list');
+        function sync() { field.value = JSON.stringify(extras); }
+        function render() {
+            sync();
+            box.innerHTML = extras.length ? '' : '<li><em>Aucun autre lieu pour l’instant.</em></li>';
+            extras.forEach(function (o, i) {
+                var li = document.createElement('li'), name = document.createElement('strong'),
+                    rm = document.createElement('button'), inp = document.createElement('input');
+                li.style.marginBottom = '10px';
+                name.textContent = o.name;
+                rm.type = 'button'; rm.className = 'button-link button-link-delete'; rm.textContent = 'Retirer';
+                rm.style.marginLeft = '10px';
+                rm.onclick = function () { extras.splice(i, 1); render(); };
+                inp.type = 'text'; inp.className = 'large-text'; inp.value = o.place || '';
+                inp.placeholder = 'Adresse des événements';
+                inp.oninput = function () { o.place = inp.value; sync(); };
+                li.appendChild(name); li.appendChild(rm); li.appendChild(document.createElement('br')); li.appendChild(inp);
+                box.appendChild(li);
+            });
+        }
+        bindSearch(document.getElementById('tle-q2'), document.getElementById('tle-results2'), function (o) {
+            var known = extras.some(function (x) { return x.id === o.id; }) || o.id === document.getElementById('tle-id').value;
+            if (!known) { extras.push(o); render(); }
+        });
+        render();
     })();
     </script>
     <?php

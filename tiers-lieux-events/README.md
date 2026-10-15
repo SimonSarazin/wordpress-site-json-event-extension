@@ -49,3 +49,12 @@ En bas de liste, dans le prolongement du trait vertical, « + Ajouter un événe
 ## OpenAgenda (administrateurs)
 
 Dans Réglages → Événements Tiers-Lieux, renseignez l'UID de l'agenda, l'UID du lieu et votre clé API secrète OpenAgenda. Le bouton « Partager » propose alors, aux administrateurs seulement, « OpenAgenda (admin) » : l'événement est envoyé via l'API (création, ou mise à jour s'il a déjà été envoyé, grâce à un identifiant externe). Titre, description, horaires et lien vers la fiche sont transmis ; l'image ne l'est pas. La clé reste côté serveur.
+
+## Plusieurs lieux regroupés
+
+Dans Réglages → Événements Tiers-Lieux, la section « Autres tiers-lieux » permet d'ajouter d'autres lieux (recherche par nom). Le code court `[tiers_lieux_events]` affiche alors ensemble, par ordre de date, les événements du lieu principal et de ces lieux ; chaque événement indique son lieu, et son adresse d'agenda est celle de son lieu. Un événement coorganisé par plusieurs lieux n'apparaît qu'une fois.
+
+- `[tiers_lieux_events id="IDENTIFIANT"]` : un seul lieu précis.
+- `[tiers_lieux_events ids="ID1,ID2"]` : une sélection de lieux.
+
+« Ajouter un événement à… » et l'envoi OpenAgenda concernent le lieu principal (OpenAgenda retrouve cependant l'événement parmi tous les lieux).

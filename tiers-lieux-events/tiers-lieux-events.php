@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Événements Tiers-Lieux.org
  * Description: Affiche les événements saisis sur tiers-lieux.org pour un tiers-lieu, via le shortcode [tiers_lieux_events].
- * Version: 1.11.0
+ * Version: 1.12.0
  * Author: La Plume à Loup
  * License: GPL-2.0-or-later
  * Text Domain: tiers-lieux-events
@@ -33,6 +33,56 @@ function tle_org()
 }
 
 /**
+ * Autres tiers-lieux affichés avec le lieu principal (Réglages → Événements Tiers-Lieux).
+ *
+ * @return array<int,array{id:string,name:string,slug:string,place:string}>
+ */
+function tle_extra_orgs()
+{
+    $saved = get_option('tle_extra_orgs');
+    $out = [];
+    foreach (is_array($saved) ? $saved : [] as $o) {
+        if (is_array($o) && !empty($o['id'])) {
+            $out[] = $o + ['name' => '', 'slug' => '', 'place' => ''];
+        }
+    }
+    return $out;
+}
+
+/**
+ * Tous les lieux regroupés : le principal d'abord, puis les autres (sans doublon).
+ */
+function tle_orgs()
+{
+    $main = tle_org();
+    $list = $main['id'] ? [$main] : [];
+    foreach (tle_extra_orgs() as $o) {
+        if ($o['id'] !== $main['id']) {
+            $list[] = $o;
+        }
+    }
+    return $list;
+}
+
+/**
+ * Cherche un lieu connu par son identifiant ; sinon le décrit seulement par son identifiant.
+ */
+function tle_org_by_id($id)
+{
+    foreach (tle_orgs() as $o) {
+        if ($o['id'] === $id) {
+            return $o;
+        }
+    }
+    return ['id' => $id, 'name' => '', 'slug' => '', 'place' => ''];
+}
+
+function tle_org_url($o)
+{
+    return $o['slug'] ? TLE_SITE_BASE . '/profil/' . rawurlencode($o['slug']) : TLE_SITE_BASE;
+}
+
+/**
  * Ligne « Ajouter un événement » avec sa fenêtre explicative.
  */
 function tle_add_event_row($org_url, $org_name, $has_slug)
@@ -40,7 +90,7 @@ function tle_add_event_row($org_url, $org_name, $has_slug)
     if (!$has_slug) {
         return '';
     }
-    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], '1.11.0', true);
+    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], '1.12.0', true);
     $name = esc_html($org_name ?: 'ce lieu');
     $add_url = add_query_arg('ajouter', 'event', $org_url . '/events');
     $row = '<details class="tle-pop tle-add"><summary>+ Ajouter un événement à ' . $name . '</summary><div class="tle-panel tle-note">'
@@ -177,9 +227,9 @@ function tle_calendar_links($title, $desc, $place, $url, $start, $end)
 
 function tle_shortcode($atts)
 {
-    $org = tle_org();
     $atts = shortcode_atts([
-        'id'     => $org['id'],
+        'id'     => '', // un seul lieu précis ; sinon, tous les lieux des réglages sont regroupés
+        'ids'    => '', // plusieurs lieux précis, séparés par des virgules
         'show'   => 'upcoming', // upcoming | past | all
         'limit'  => 10,
         'cache'  => 30, // minutes
@@ -188,28 +238,45 @@ function tle_shortcode($atts)
         'empty'  => 'Aucun événement à venir pour le moment.',
     ], $atts, 'tiers_lieux_events');
 
-    if ('' === $atts['id']) {
+    $wanted = array_filter(array_map('trim', explode(',', $atts['ids'] ?: $atts['id'])));
+    $orgs = $wanted ? array_map('tle_org_by_id', array_values(array_unique($wanted))) : tle_orgs();
+    if (!$orgs) {
         if (!current_user_can('manage_options')) {
             return '';
         }
-        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.11.0');
+        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.12.0');
         return '<div class="tle-alert" role="alert"><strong>Événements Tiers-Lieux :</strong> aucun tiers-lieu n\'est configuré. '
             . '<a href="' . esc_url(admin_url('options-general.php?page=tle-settings')) . '">Choisir mon tiers-lieu</a>'
             . '<br><small>Ce message n\'est visible que par les administrateurs ; les visiteurs ne voient rien tant que le lieu n\'est pas choisi.</small></div>';
     }
-    $same_org = $atts['id'] === $org['id'];
-    if ('' === $atts['place'] && $same_org) {
-        $atts['place'] = $org['place'];
-    }
-    $org_name = $same_org ? $org['name'] : '';
-    $org_url = $same_org && $org['slug'] ? TLE_SITE_BASE . '/profil/' . rawurlencode($org['slug']) : TLE_SITE_BASE;
+    $first = $orgs[0];
+    $org_name = $first['name'];
+    $org_url = tle_org_url($first);
+    $grouped = count($orgs) > 1;
 
-    $events = tle_fetch_events($atts['id'], $atts['cache']);
-    if (is_wp_error($events)) {
+    $events = [];
+    $errors = [];
+    foreach ($orgs as $o) {
+        $found = tle_fetch_events($o['id'], $atts['cache']);
+        if (is_wp_error($found)) {
+            $errors[] = $found->get_error_message();
+            continue;
+        }
+        foreach ($found as $e) {
+            // Un même événement coorganisé par deux lieux n'apparaît qu'une fois.
+            $key = !empty($e['slug']) ? $e['slug'] : $o['id'] . $e['name'] . $e['startDateSec'];
+            if (!isset($events[$key])) {
+                $e['_org'] = $o;
+                $events[$key] = $e;
+            }
+        }
+    }
+    if (!$events && $errors) {
         return current_user_can('manage_options')
-            ? '<p class="tle-error">' . esc_html($events->get_error_message()) . '</p>'
+            ? '<p class="tle-error">' . esc_html($errors[0]) . '</p>'
             : '';
     }
+    $events = array_values($events);
 
     $now = time();
     $show = $atts['show'];
@@ -237,12 +304,12 @@ function tle_shortcode($atts)
     }
 
     if (!$events) {
-        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.11.0');
+        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.12.0');
         return '<div class="tle-list"><p class="tle-empty">' . esc_html($atts['empty']) . '</p>'
-            . tle_add_event_row($org_url, $org_name, $same_org && $org['slug']) . '</div>';
+            . tle_add_event_row($org_url, $org_name, (bool) $first['slug']) . '</div>';
     }
 
-    wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.11.0');
+    wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.12.0');
 
     $with_images = 'no' !== $atts['images'];
     $is_admin = current_user_can('manage_options');
@@ -270,7 +337,8 @@ function tle_shortcode($atts)
         $day_label = $multi
             ? tle_format_when($start, $end)
             : ucfirst(rtrim(tle_date('D', $start), '.')) . '. ' . tle_date('j M', $start);
-        $place = $atts['place'];
+        $eo = $e['_org'];
+        $place = '' !== $atts['place'] ? $atts['place'] : $eo['place'];
         $full_desc = !empty($e['shortDescription']) ? wp_strip_all_tags($e['shortDescription']) : '';
         $cal = tle_calendar_links($e['name'], $full_desc, $place, $link, $start, $end);
         $ld = [
@@ -282,8 +350,8 @@ function tle_shortcode($atts)
         if ($place) {
             $ld['location'] = ['@type' => 'Place', 'name' => $place];
         }
-        if ($org_name) {
-            $ld['organizer'] = ['@type' => 'Organization', 'name' => $org_name, 'url' => $org_url];
+        if ($eo['name']) {
+            $ld['organizer'] = ['@type' => 'Organization', 'name' => $eo['name'], 'url' => tle_org_url($eo)];
         }
         if ($end) {
             $ld['endDate'] = tle_date('c', $end);
@@ -311,6 +379,9 @@ function tle_shortcode($atts)
         }
         $out .= '</div>';
         $out .= '<div class="tle-body">';
+        if ($grouped && $eo['name']) {
+            $out .= '<div class="tle-org">' . esc_html($eo['name']) . '</div>';
+        }
         $out .= '<div class="tle-title">' . $title . '</div>';
         if ($city) {
             $out .= '<div class="tle-place">' . esc_html($city) . '</div>';
@@ -371,18 +442,23 @@ function tle_shortcode($atts)
         $out .= '</div>';
         $out .= '</article>';
     }
-    $out .= tle_add_event_row($org_url, $org_name, $same_org && $org['slug']);
+    $out .= tle_add_event_row($org_url, $org_name, (bool) $first['slug']);
     $out .= '</div>';
 
-    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], '1.11.0', true);
+    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], '1.12.0', true);
 
     // Données structurées schema.org pour les moteurs de recherche et les IA.
     $out .= '<script type="application/ld+json">'
         . wp_json_encode(['@context' => 'https://schema.org', '@graph' => $jsonld], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG)
         . '</script>';
-    $api = TLE_API_BASE . '/co2/element/getdatadetail/type/organizations/id/' . rawurlencode($atts['id']) . '/dataName/events';
-    $out .= '<p class="tle-source">Source : <a href="' . esc_url($org_url . ($same_org && $org['slug'] ? '/events' : '')) . '" target="_blank" rel="noopener">tiers-lieux.org</a>'
-        . ' · <a href="' . esc_url($api) . '" target="_blank" rel="noopener">données JSON</a></p>';
+    $sources = [];
+    foreach ($orgs as $o) {
+        $api = TLE_API_BASE . '/co2/element/getdatadetail/type/organizations/id/' . rawurlencode($o['id']) . '/dataName/events';
+        $sources[] = '<a href="' . esc_url(tle_org_url($o) . ($o['slug'] ? '/events' : '')) . '" target="_blank" rel="noopener">'
+            . esc_html($o['name'] ?: 'tiers-lieux.org') . '</a>'
+            . ' (<a href="' . esc_url($api) . '" target="_blank" rel="noopener">données JSON</a>)';
+    }
+    $out .= '<p class="tle-source">' . ($grouped ? 'Sources : ' : 'Source : ') . implode(' · ', $sources) . '</p>';
     return $out;
 }
 add_shortcode('tiers_lieux_events', 'tle_shortcode');
@@ -395,7 +471,9 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links)
 });
 add_action('admin_init', function () {
     if (isset($_GET['tle_purge']) && current_user_can('manage_options') && check_admin_referer('tle_purge')) {
-        delete_transient('tle_events_' . md5(tle_org()['id']));
+        foreach (tle_orgs() as $o) {
+            delete_transient('tle_events_' . md5($o['id']));
+        }
         wp_safe_redirect(admin_url('plugins.php'));
         exit;
     }
