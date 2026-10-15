@@ -84,6 +84,11 @@ p:empty, .tle-list p:empty, code:empty, p:has(> code:empty:only-child) { display
 .tle-list .tle-body .tle-admin { margin-top: .35rem; }
 .tle-list .tle-admin .tle-copied { font-style: normal; color: #1a7f37 !important; }
 
-.tle-list .tle-panel.tle-long { display: block; width: 22rem; max-width: 80vw; white-space: normal; font-size: .85rem; font-weight: 300; }
-.tle-list .tle-panel.tle-long p { margin: 0 0 .6rem !important; background: none !important; font-size: inherit; line-height: 1.4; }
-.tle-list .tle-panel.tle-long p:last-child { margin-bottom: 0 !important; }
+.tle-list .tle-body .tle-more { margin: .4rem 0 0; padding: 0; font-size: .85rem; }
+.tle-list .tle-body .tle-more summary { display: block; list-style: none; margin: 0; padding: 0; cursor: pointer; font-weight: 600; text-decoration: none !important; background: none !important; }
+.tle-list .tle-body .tle-more summary::-webkit-details-marker { display: none; }
+.tle-list .tle-body .tle-more summary::before { display: none !important; content: none !important; }
+.tle-list .tle-body .tle-more summary::after { content: " ▾" !important; display: inline !important; font-weight: 400; }
+.tle-list .tle-body .tle-more[open] summary::after { content: " ▴" !important; }
+.tle-list .tle-body .tle-long { margin: .5rem 0 0; padding: 0; font-weight: 300; background: none !important; }
+.tle-list .tle-body .tle-long p { margin: 0 0 .6rem !important; background: none !important; font-size: inherit; }
