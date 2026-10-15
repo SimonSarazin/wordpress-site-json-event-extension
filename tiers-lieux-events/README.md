@@ -26,7 +26,7 @@ Zipper le dossier `tiers-lieux-events/`, puis Extensions → Ajouter → Télév
 | Attribut | Défaut | Valeurs |
 |---|---|---|
 | `show` | `upcoming` | `upcoming` (à venir), `past` (passés, du plus récent), `all` |
-| `limit` | `10` | nombre max, `0` = illimité |
+| `limit` | `20` | nombre max, `0` = illimité |
 | `cache` | `5` | minutes de cache |
 | `images` | `yes` | `no` pour masquer |
 | `empty` | « Aucun événement à venir… » | message si liste vide |

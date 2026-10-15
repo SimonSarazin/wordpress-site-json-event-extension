@@ -74,7 +74,7 @@ add_action('wp_ajax_tle_openagenda', function () {
     $slug = isset($_POST['slug']) ? sanitize_text_field(wp_unslash($_POST['slug'])) : '';
     $event = null;
     foreach (tle_orgs() as $org) {
-        $events = tle_fetch_events($org['id'], 30);
+        $events = tle_fetch_events($org["id"], 5);
         foreach (is_wp_error($events) ? [] : $events as $e) {
             if (!empty($e['slug']) && $e['slug'] === $slug) {
                 $event = $e;

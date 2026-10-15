@@ -232,7 +232,7 @@ function tle_shortcode($atts)
         'groupe' => 'no', // yes : ajoute les autres lieux des réglages
         'ids'    => '', // plusieurs lieux précis, séparés par des virgules
         'show'   => 'upcoming', // upcoming | past | all
-        'limit'  => 10,
+        'limit'  => 20,
         'cache'  => 5, // minutes
         'images' => 'yes',
         'place'  => '', // adresse pour l'agenda et les données structurées ; défaut : celle des réglages
