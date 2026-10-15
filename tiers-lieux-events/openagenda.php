@@ -112,8 +112,8 @@ add_action('wp_ajax_tle_openagenda', function () {
     $response = wp_remote_request($url, [
         'method'  => 'PUT',
         'timeout' => 20,
-        'headers' => ['access-token' => $token, 'lang' => 'fr'],
-        'body'    => ['data' => wp_json_encode($data)], // l'API attend le JSON dans un champ de formulaire « data »
+        'headers' => ['access-token' => $token, 'Content-Type' => 'application/json', 'lang' => 'fr'],
+        'body'    => wp_json_encode(['data' => $data]), // les données de l'événement sont sous la clé « data »
     ]);
     if (is_wp_error($response)) {
         wp_send_json_error($response->get_error_message());
