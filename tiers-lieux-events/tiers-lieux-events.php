@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Événements Tiers-Lieux.org
  * Description: Affiche les événements saisis sur tiers-lieux.org pour un tiers-lieu, via le shortcode [tiers_lieux_events].
- * Version: 1.12.0
+ * Version: 1.12.1
  * Author: La Plume à Loup
  * License: GPL-2.0-or-later
  * Text Domain: tiers-lieux-events
@@ -90,7 +90,7 @@ function tle_add_event_row($org_url, $org_name, $has_slug)
     if (!$has_slug) {
         return '';
     }
-    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], '1.12.0', true);
+    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], (string) filemtime(__DIR__ . '/tle.js'), true);
     $name = esc_html($org_name ?: 'ce lieu');
     $add_url = add_query_arg('ajouter', 'event', $org_url . '/events');
     $row = '<details class="tle-pop tle-add"><summary>+ Ajouter un événement à ' . $name . '</summary><div class="tle-panel tle-note">'
@@ -245,7 +245,7 @@ function tle_shortcode($atts)
         if (!current_user_can('manage_options')) {
             return '';
         }
-        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.12.0');
+        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], (string) filemtime(__DIR__ . '/style.css'));
         return '<div class="tle-alert" role="alert"><strong>Événements Tiers-Lieux :</strong> aucun tiers-lieu n\'est configuré. '
             . '<a href="' . esc_url(admin_url('options-general.php?page=tle-settings')) . '">Choisir mon tiers-lieu</a>'
             . '<br><small>Ce message n\'est visible que par les administrateurs ; les visiteurs ne voient rien tant que le lieu n\'est pas choisi.</small></div>';
@@ -305,12 +305,12 @@ function tle_shortcode($atts)
     }
 
     if (!$events) {
-        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.12.0');
+        wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], (string) filemtime(__DIR__ . '/style.css'));
         return '<div class="tle-list"><p class="tle-empty">' . esc_html($atts['empty']) . '</p>'
             . tle_add_event_row($org_url, $org_name, (bool) $first['slug']) . '</div>';
     }
 
-    wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], '1.12.0');
+    wp_enqueue_style('tle-style', plugins_url('style.css', __FILE__), [], (string) filemtime(__DIR__ . '/style.css'));
 
     $with_images = 'no' !== $atts['images'];
     $is_admin = current_user_can('manage_options');
@@ -451,7 +451,7 @@ function tle_shortcode($atts)
     $out .= tle_add_event_row($org_url, $org_name, (bool) $first['slug']);
     $out .= '</div>';
 
-    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], '1.12.0', true);
+    wp_enqueue_script('tle-script', plugins_url('tle.js', __FILE__), [], (string) filemtime(__DIR__ . '/tle.js'), true);
 
     // Données structurées schema.org pour les moteurs de recherche et les IA.
     $out .= '<script type="application/ld+json">'
