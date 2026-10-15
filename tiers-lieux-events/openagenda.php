@@ -107,11 +107,30 @@ add_action('wp_ajax_tle_openagenda', function () {
 
     // Création ou mise à jour selon l'identifiant externe : renvoyer un événement ne le duplique pas.
     $url = sprintf('%s/agendas/%s/events/ext/tiers-lieux/%s', TLE_OA_API, rawurlencode($s['agenda']), rawurlencode($slug));
+    $headers = ['access-token' => $token, 'Content-Type' => 'application/json', 'lang' => 'fr'];
+    $body = wp_json_encode(['data' => $data]); // les données de l'événement sont sous la clé « data »
+
+    // Image : OpenAgenda attend un fichier ; on le télécharge puis on l'envoie en multipart.
+    $img_url = tle_image_url(!empty($event['profilImageUrl']) ? $event['profilImageUrl'] : ($event['profilMediumImageUrl'] ?? ''));
+    if ($img_url) {
+        $img = wp_remote_get($img_url, ['timeout' => 20]);
+        $bytes = is_wp_error($img) || 200 !== wp_remote_retrieve_response_code($img) ? '' : wp_remote_retrieve_body($img);
+        $type = is_wp_error($img) ? '' : strtolower(strtok((string) wp_remote_retrieve_header($img, 'content-type'), ';'));
+        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'][$type] ?? '';
+        if ('' !== $bytes && '' !== $ext && strlen($bytes) < 9 * MB_IN_BYTES) {
+            $boundary = 'tle' . wp_generate_password(24, false);
+            $body = "--$boundary\r\nContent-Disposition: form-data; name=\"data\"\r\n\r\n" . wp_json_encode($data) . "\r\n"
+                . "--$boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"evenement.$ext\"\r\nContent-Type: $type\r\n\r\n"
+                . $bytes . "\r\n--$boundary--\r\n";
+            $headers['Content-Type'] = 'multipart/form-data; boundary=' . $boundary;
+        }
+    }
+
     $response = wp_remote_request($url, [
         'method'  => 'PUT',
-        'timeout' => 20,
-        'headers' => ['access-token' => $token, 'Content-Type' => 'application/json', 'lang' => 'fr'],
-        'body'    => wp_json_encode(['data' => $data]), // les données de l'événement sont sous la clé « data »
+        'timeout' => 30,
+        'headers' => $headers,
+        'body'    => $body,
     ]);
     if (is_wp_error($response)) {
         wp_send_json_error($response->get_error_message());
