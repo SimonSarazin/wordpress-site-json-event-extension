@@ -154,7 +154,7 @@ function tle_settings_page()
         <?php if (isset($_GET['tle_extra_saved'])) : ?>
             <div class="notice notice-success is-dismissible"><p>Autres lieux enregistrés.</p></div>
         <?php endif; ?>
-        <p>Le code court <code>[tiers_lieux_events]</code> affiche ensemble, par ordre de date, les événements du lieu principal et de ces lieux. Chaque événement indique alors son lieu.</p>
+        <p>Par défaut, <code>[tiers_lieux_events]</code> n'affiche que votre lieu principal. Pour afficher ensemble, par ordre de date, le lieu principal et ces lieux, utilisez <code>[tiers_lieux_events groupe="oui"]</code> : chaque événement indique alors son lieu.</p>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="tle_save_extra">
             <?php wp_nonce_field('tle_save_extra'); ?>
@@ -192,7 +192,7 @@ function tle_settings_page()
         </form>
 
         <h2>Utilisation</h2>
-        <p>Placez le code court <code>[tiers_lieux_events]</code> dans un bloc « Code court » d'une page. Options : <code>show="upcoming|past|all"</code>, <code>limit="10"</code>, <code>images="no"</code>, <code>id="…"</code> (un seul lieu précis), <code>ids="…,…"</code> (une sélection de lieux).</p>
+        <p>Placez le code court <code>[tiers_lieux_events]</code> dans un bloc « Code court » d'une page. Options : <code>show="upcoming|past|all"</code>, <code>limit="10"</code>, <code>images="no"</code>, <code>groupe="oui"</code> (ajoute les autres lieux), <code>id="…"</code> (un seul lieu précis), <code>ids="…,…"</code> (une sélection de lieux).</p>
     </div>
     <script>
     (function () {

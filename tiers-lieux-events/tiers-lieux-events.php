@@ -228,7 +228,8 @@ function tle_calendar_links($title, $desc, $place, $url, $start, $end)
 function tle_shortcode($atts)
 {
     $atts = shortcode_atts([
-        'id'     => '', // un seul lieu précis ; sinon, tous les lieux des réglages sont regroupés
+        'id'     => '', // un seul lieu précis ; sinon, le lieu principal des réglages
+        'groupe' => 'no', // yes : ajoute les autres lieux des réglages
         'ids'    => '', // plusieurs lieux précis, séparés par des virgules
         'show'   => 'upcoming', // upcoming | past | all
         'limit'  => 10,
@@ -239,7 +240,7 @@ function tle_shortcode($atts)
     ], $atts, 'tiers_lieux_events');
 
     $wanted = array_filter(array_map('trim', explode(',', $atts['ids'] ?: $atts['id'])));
-    $orgs = $wanted ? array_map('tle_org_by_id', array_values(array_unique($wanted))) : tle_orgs();
+    $orgs = $wanted ? array_map('tle_org_by_id', array_values(array_unique($wanted))) : ('yes' === $atts['groupe'] || 'oui' === $atts['groupe'] ? tle_orgs() : array_slice(tle_orgs(), 0, 1));
     if (!$orgs) {
         if (!current_user_can('manage_options')) {
             return '';
