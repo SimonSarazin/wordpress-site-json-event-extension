@@ -48,7 +48,7 @@ En bas de liste, dans le prolongement du trait vertical, « + Ajouter un événe
 
 ## OpenAgenda (administrateurs)
 
-Dans Réglages → Événements Tiers-Lieux, renseignez l'UID de l'agenda, l'UID du lieu et votre clé API secrète OpenAgenda. Le bouton « Partager » propose alors, aux administrateurs seulement, « OpenAgenda (admin) » : l'événement est envoyé via l'API (création, ou mise à jour s'il a déjà été envoyé, grâce à un identifiant externe). Titre, description, horaires et lien vers la fiche sont transmis ; l'image ne l'est pas. La clé reste côté serveur.
+Dans Réglages → Événements Tiers-Lieux, renseignez l'UID de l'agenda, l'UID du lieu et votre clé API secrète OpenAgenda. Le bouton « Partager » propose alors, aux administrateurs seulement, « OpenAgenda (admin) » : l'événement est envoyé via l'API (création, ou mise à jour s'il a déjà été envoyé, grâce à un identifiant externe). Titre, description (avec le lien vers la fiche), horaires et image sont transmis. La clé reste côté serveur.
 
 ## Plusieurs lieux regroupés
 
